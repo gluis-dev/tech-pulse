@@ -23,7 +23,7 @@ public class NewsController {
         NewsFetchResult result = newsAggregatorService.getNews(window, sort);
         return new NewsResponse(
             result.items(),
-            result.items().size(),
+            result.total(),
             window,
             sort,
             result.live(),

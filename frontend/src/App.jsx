@@ -24,6 +24,7 @@ export default function App() {
   const [windowValue, setWindowValue] = useState("24h");
   const [sortValue, setSortValue] = useState("viral");
   const [items, setItems] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -45,9 +46,11 @@ export default function App() {
         }
 
         const payload = await response.json();
-        setItems(payload.items ?? []);
+        const nextItems = payload.items ?? [];
+        setItems(nextItems);
+        setTotal(payload.total ?? nextItems.length);
 
-        if (payload.live === false && (!payload.items || payload.items.length === 0)) {
+        if (payload.live === false && nextItems.length === 0) {
           setError(payload.message || "No live articles are available right now.");
         }
       } catch (err) {
@@ -75,6 +78,7 @@ export default function App() {
     sortValue === "viral" ? "Momentum-ranked" : sortValue === "latest" ? "Freshest-first" : "Publisher-sorted";
   const headlineItems = items.slice(0, 3);
   const gridItems = items.slice(3);
+  const showingAll = total <= items.length;
 
   return (
     <div className="app-shell">
@@ -108,12 +112,12 @@ export default function App() {
             <div className="eyebrow">Live Snapshot</div>
             <div className="stats-grid">
               <div className="stat">
-                <div className="stat-label">Stories in view</div>
-                <div className="stat-value">{items.length}</div>
+                <div className="stat-label">Stories matched</div>
+                <div className="stat-value">{total}</div>
               </div>
               <div className="stat">
-                <div className="stat-label">Active sources</div>
-                <div className="stat-value">{uniqueSources}</div>
+                <div className="stat-label">Shown right now</div>
+                <div className="stat-value">{items.length}</div>
               </div>
               <div className="stat">
                 <div className="stat-label">Average virality</div>
@@ -168,10 +172,14 @@ export default function App() {
         <div className="toolbar-summary">
           <div className="toolbar-summary-label">Live Coverage</div>
           <div className="toolbar-summary-value">
-            {items.length ? `${items.length} live articles` : "Waiting for stories"}
+            {total ? `${total} matched articles` : "Waiting for stories"}
           </div>
           <div className="toolbar-summary-meta">
-            {items.length ? `${uniqueSources} active sources` : "Fetching the latest feed"}
+            {total
+              ? showingAll
+                ? `${uniqueSources} active sources in view`
+                : `Showing top ${items.length} from ${uniqueSources} visible sources`
+              : "Fetching the latest feed"}
           </div>
         </div>
       </section>
