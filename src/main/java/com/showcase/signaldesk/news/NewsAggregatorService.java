@@ -32,6 +32,7 @@ public class NewsAggregatorService {
     private static final String DOMAINS =
         "techcrunch.com,theverge.com,wired.com,arstechnica.com,engadget.com,thenextweb.com,venturebeat.com";
     private static final int MAX_ITEMS = 60;
+    private static final int FETCH_PAGE_SIZE = 100;
     private static final Duration CACHE_TTL = Duration.ofMinutes(5);
 
     private final HttpClient httpClient;
@@ -175,10 +176,14 @@ public class NewsAggregatorService {
                 .map(this::toNewsItem)
                 .filter(Objects::nonNull)
                 .toList();
+
             logger.info(
-                "NewsAPI returned {} candidate articles from the shared fetch window.",
-                items.size()
+                "NewsAPI returned {} raw articles and {} mapped candidate articles from the free-plan first page (totalResults={}).",
+                payload.articles().size(),
+                items.size(),
+                payload.totalResults()
             );
+
             return new ApiFetchOutcome(
                 items,
                 items.isEmpty()
@@ -326,7 +331,7 @@ public class NewsAggregatorService {
                 + "&domains=" + URLEncoder.encode(DOMAINS, "UTF-8")
                 + "&language=en"
                 + "&sortBy=" + sortBy
-                + "&pageSize=100"
+                + "&pageSize=" + FETCH_PAGE_SIZE
                 + "&from=" + URLEncoder.encode(fromValue, "UTF-8");
         } catch (UnsupportedEncodingException ex) {
             throw new IllegalStateException("UTF-8 should always be available", ex);
@@ -411,6 +416,7 @@ public class NewsAggregatorService {
         String status,
         String code,
         String message,
+        int totalResults,
         List<NewsApiArticle> articles
     ) {
     }
